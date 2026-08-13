@@ -1,0 +1,7 @@
+# 개인 학습자료 (공개 저장소에 올리지 않음)
+*.pdf
+
+# 작업용 파일
+ex_260813.bundle
+testfile.txt
+git_push.bat
