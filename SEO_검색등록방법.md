@@ -72,21 +72,16 @@ https://ex-260813-awjy.vercel.app/
 <details>
 <summary>HTML 태그 방법으로 하고 싶다면</summary>
 
-`index.html` 을 메모장으로 열고 아래 부분을 찾으세요.
-
-```html
-<!--
-<meta name="google-site-verification" content="여기에_확인_코드_붙여넣기">
--->
-```
-
-이걸 아래처럼 바꿉니다. (주석 기호 `<!--` 와 `-->` 를 지우고 코드를 넣습니다)
+`index.html` 을 메모장으로 열고 `google-site-verification` 을 찾으세요.
+설명 주석이 끝나는 줄 바로 **아래**에 서치 콘솔에서 받은 태그를 한 줄 붙여넣습니다.
 
 ```html
 <meta name="google-site-verification" content="서치콘솔에서_받은_코드">
 ```
 
 저장 후 `git_push.bat` 실행하고 **확인** 을 누르세요.
+
+> 주의: 붙여넣을 때 주석 기호 안쪽에 넣으면 안 됩니다. 주석이 끝난 다음 줄에 넣으세요.
 </details>
 
 ---
