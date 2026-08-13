@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>나와 데이트할래?</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: linear-gradient(135deg, #ffdde1, #ffc1cc, #ffb6d5);
+  }
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  .heart {
+    position: absolute;
+    bottom: -40px;
+    font-size: 24px;
+    opacity: 0.7;
+    animation: floatUp linear infinite;
+    pointer-events: none;
+    user-select: none;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+    100% { transform: translateY(-110vh) rotate(30deg); opacity: 0; }
+  }
+  .card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 2;
+  }
+  h1 {
+    font-size: 32px;
+    color: #d6336c;
+    margin: 0 0 8px;
+    text-shadow: 0 2px 8px rgba(255,255,255,0.6);
+  }
+  .sub {
+    font-size: 15px;
+    color: #a61e4d;
+    margin: 0 0 36px;
+  }
+  .button-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    position: relative;
+  }
+  .btn {
+    font-size: 20px;
+    font-weight: 700;
+    padding: 16px 36px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(214, 51, 108, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.95); }
+  .btn.yes {
+    background: #d6336c;
+    color: #fff;
+  }
+  .btn.yes:hover {
+    background: #c2255c;
+    box-shadow: 0 8px 20px rgba(214, 51, 108, 0.45);
+  }
+  .btn.no {
+    background: #fff;
+    color: #d6336c;
+    border: 2px solid #ffb6d5;
+    z-index: 5;
+    transition: transform 0.15s ease;
+  }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(198, 34, 92, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .popup {
+    background: #fff;
+    border-radius: 24px;
+    padding: 40px 48px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    transform: scale(0.8);
+    transition: transform 0.25s ease;
+  }
+  .overlay.show .popup {
+    transform: scale(1);
+  }
+  .popup .emoji {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+  .popup p {
+    font-size: 24px;
+    font-weight: 700;
+    color: #d6336c;
+    margin: 0 0 8px;
+  }
+  .popup span {
+    font-size: 14px;
+    color: #999;
+  }
+  @media (max-width: 480px) {
+    h1 { font-size: 24px; }
+    .btn { font-size: 16px; padding: 14px 26px; }
+    .button-row { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="card">
+    <h1>나와 데이트할래? 💕</h1>
+    <p class="sub">신중하게 골라줘</p>
+    <div class="button-row">
+      <button class="btn yes" id="btn-yes">좋아!!</button>
+      <button class="btn no" id="btn-no">싫어!!</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="popup">
+    <div class="emoji">🥰</div>
+    <p>히히 나도 좋아!!</p>
+    <span>빨리 만나러 가자 🫶</span>
+  </div>
+</div>
+
+<script>
+const noBtn = document.getElementById('btn-no');
+const yesBtn = document.getElementById('btn-yes');
+const overlay = document.getElementById('overlay');
+const stage = document.getElementById('stage');
+
+let dodging = false;
+
+const EDGE_MARGIN = 12;
+
+function boundsFor(w, h) {
+  const maxLeft = Math.max(EDGE_MARGIN, window.innerWidth - w - EDGE_MARGIN);
+  const maxTop = Math.max(EDGE_MARGIN, window.innerHeight - h - EDGE_MARGIN);
+  return { maxLeft, maxTop };
+}
+
+function randomPosition() {
+  const w = noBtn.offsetWidth;
+  const h = noBtn.offsetHeight;
+  const { maxLeft, maxTop } = boundsFor(w, h);
+  const x = EDGE_MARGIN + Math.random() * Math.max(0, maxLeft - EDGE_MARGIN);
+  const y = EDGE_MARGIN + Math.random() * Math.max(0, maxTop - EDGE_MARGIN);
+  return { x, y };
+}
+
+function activateFixedMode() {
+  if (dodging) return;
+  const rect = noBtn.getBoundingClientRect();
+  noBtn.style.position = 'fixed';
+  noBtn.style.left = rect.left + 'px';
+  noBtn.style.top = rect.top + 'px';
+  noBtn.style.margin = '0';
+  dodging = true;
+  clampToViewport();
+}
+
+// 창 크기가 바뀌어도(리사이즈, 모바일 화면 회전 등) 버튼이 화면 밖으로 나가지 않도록 위치를 다시 맞춤
+function clampToViewport() {
+  if (!dodging) return;
+  const rect = noBtn.getBoundingClientRect();
+  const { maxLeft, maxTop } = boundsFor(rect.width, rect.height);
+  const newLeft = Math.min(Math.max(EDGE_MARGIN, rect.left), maxLeft);
+  const newTop = Math.min(Math.max(EDGE_MARGIN, rect.top), maxTop);
+  noBtn.style.left = newLeft + 'px';
+  noBtn.style.top = newTop + 'px';
+}
+window.addEventListener('resize', clampToViewport);
+window.addEventListener('orientationchange', clampToViewport);
+
+function dodge() {
+  activateFixedMode();
+  const { x, y } = randomPosition();
+  noBtn.style.left = x + 'px';
+  noBtn.style.top = y + 'px';
+}
+
+// 데스크톱: 버튼에 실제로 가까워지기 전까지는 절대 움직이지 않음. 가까워지면 그때부터 조금씩 이동.
+const THRESHOLD = 65;     // 이 거리 안에 들어와야 반응 시작 (버튼 바로 근처에서만 반응)
+const MAX_SPEED = 1.1;    // 프레임당 최대 이동 거리 (작을수록 천천히, 부드럽게)
+
+let lastMouseX = null;
+let lastMouseY = null;
+
+document.addEventListener('mousemove', (e) => {
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+  activateFixedMode();
+});
+
+function animateDodge() {
+  requestAnimationFrame(animateDodge);
+  if (!dodging || lastMouseX === null) return;
+
+  const rect = noBtn.getBoundingClientRect();
+  const { maxLeft, maxTop } = boundsFor(rect.width, rect.height);
+
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = cx - lastMouseX;
+  const dy = cy - lastMouseY;
+  const dist = Math.hypot(dx, dy) || 1;
+
+  // 임계 거리 밖이면 완전히 정지 상태 유지 (움직이지 않음)
+  if (dist >= THRESHOLD) return;
+
+  const strength = 1 - dist / THRESHOLD; // 가까울수록 1에 가까움, 멀수록 0에 가까움
+  const speed = strength * MAX_SPEED;
+  const angle = Math.atan2(dy, dx);
+
+  const newLeft = Math.min(Math.max(EDGE_MARGIN, rect.left + Math.cos(angle) * speed), maxLeft);
+  const newTop = Math.min(Math.max(EDGE_MARGIN, rect.top + Math.sin(angle) * speed), maxTop);
+
+  noBtn.style.left = newLeft + 'px';
+  noBtn.style.top = newTop + 'px';
+}
+requestAnimationFrame(animateDodge);
+
+// 모바일: 터치(클릭 시도) 하는 순간 도망
+noBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  dodge();
+}, { passive: false });
+
+noBtn.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch') {
+    e.preventDefault();
+    dodge();
+  }
+});
+
+// 안전장치: 혹시라도 클릭이 성사되면 무시
+noBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  dodge();
+});
+
+yesBtn.addEventListener('click', () => {
+  overlay.classList.add('show');
+});
+
+// 팝업 바깥(카드 이외 영역)을 누르면 처음 화면으로 복귀
+overlay.addEventListener('click', (e) => {
+  if (e.target !== overlay) return; // 팝업 내부 클릭은 무시
+  overlay.classList.remove('show');
+  dodging = false;
+  lastMouseX = null;
+  lastMouseY = null;
+  noBtn.style.position = '';
+  noBtn.style.left = '';
+  noBtn.style.top = '';
+  noBtn.style.margin = '';
+});
+
+// 떠다니는 하트 배경
+function spawnHeart() {
+  const heart = document.createElement('div');
+  heart.className = 'heart';
+  heart.textContent = ['💕','💗','💖','💘'][Math.floor(Math.random() * 4)];
+  heart.style.left = Math.random() * 100 + 'vw';
+  heart.style.fontSize = (16 + Math.random() * 20) + 'px';
+  const duration = 6 + Math.random() * 6;
+  heart.style.animationDuration = duration + 's';
+  stage.appendChild(heart);
+  setTimeout(() => heart.remove(), duration * 1000);
+}
+setInterval(spawnHeart, 500);
+</script>
+
+</body>
+</html>
