@@ -105,34 +105,76 @@ module.exports = async (req, res) => {
 
   report.Supabase응답 = { REST루트: rootStatus, 테이블: tableStatus };
 
-  // 5) 두 결과를 조합해 원인을 특정합니다
-  if (rootStatus === 401 || rootStatus === 403) {
-    report.진단.push('키가 거부되었습니다 (' + rootStatus + ').');
+  // 5) 결과를 조합해 원인을 특정합니다.
+  //    주의: Supabase의 REST 루트(/rest/v1/)는 anon 키로 401을 돌려주는 것이 정상입니다.
+  //          (OpenAPI 명세 조회는 기본적으로 막혀 있음)
+  //          따라서 테이블 조회 결과를 우선으로 판단합니다.
+  if (tableStatus === 200) {
+    report.진단.push('모든 설정이 정상입니다. 주소·키·테이블 모두 확인되었습니다.');
+    if (rootStatus === 401 || rootStatus === 403) {
+      report.진단.push('참고: REST 루트가 401인 것은 Supabase 기본 동작이며 문제가 아닙니다.');
+    }
+    report.결론 = '설정 정상 — 저장이 동작해야 합니다';
+  } else if (tableStatus === 401 || tableStatus === 403) {
+    report.진단.push('키가 거부되었습니다 (' + tableStatus + ').');
     report.진단.push('Supabase > Project Settings > Data API 의 anon public 키가 맞는지 확인하세요.');
     report.진단.push('다른 프로젝트의 키를 넣었을 가능성도 확인해보세요.');
+    report.응답본문 = tableBody;
     report.결론 = 'ANON KEY 오류';
-  } else if (rootStatus === 404) {
-    report.진단.push('REST 루트조차 404입니다. SUPABASE_URL 주소가 잘못되었습니다.');
+  } else if (tableStatus === 404 && rootStatus === 404) {
+    report.진단.push('REST 루트와 테이블 모두 404입니다. SUPABASE_URL 주소가 잘못되었습니다.');
     report.진단.push('Supabase > Project Settings > Data API 의 Project URL 을 그대로 복사해 넣으세요.');
     report.결론 = 'SUPABASE_URL 오류';
-  } else if (tableStatus === 200) {
-    report.진단.push('모든 설정이 정상입니다. 주소·키·테이블 모두 확인되었습니다.');
-    report.결론 = '설정 정상 — 저장이 동작해야 합니다';
   } else if (tableStatus === 404) {
     report.진단.push('주소와 키는 정상입니다. 다만 테이블 "' + table + '" 이 없습니다.');
     report.진단.push('Supabase > SQL Editor 에서 supabase_setup.sql 내용을 실행하세요.');
     report.진단.push('이미 실행했다면 테이블 이름이 정확히 "' + table + '" 인지 확인하세요.');
     report.응답본문 = tableBody;
     report.결론 = '테이블 없음 — supabase_setup.sql 을 실행하세요';
-  } else if (tableStatus === 401 || tableStatus === 403) {
-    report.진단.push('테이블 접근이 거부되었습니다. RLS 정책 문제일 수 있습니다.');
-    report.진단.push('다만 저장(INSERT)만 열어둔 설정이라면 정상일 수 있습니다.');
-    report.응답본문 = tableBody;
-    report.결론 = '테이블 권한 확인 필요';
   } else {
     report.진단.push('예상치 못한 응답입니다.');
     report.응답본문 = tableBody;
     report.결론 = '알 수 없는 오류 (루트 ' + rootStatus + ', 테이블 ' + tableStatus + ')';
+  }
+
+  // 6) 주소 뒤에 ?insert=1 을 붙이면 실제로 한 줄 저장해봅니다.
+  //    조회가 되더라도 RLS 정책 때문에 저장만 막히는 경우가 있어서,
+  //    진짜로 되는지 확인하려면 이 검사가 필요합니다.
+  const wantsInsertTest = String(req.url || '').includes('insert=1');
+  if (wantsInsertTest) {
+    const testRecord = {
+      groom_name: '테스트',
+      bride_name: '테스트',
+      wedding_date: '2099-12-31',
+      used_date: new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10),
+      days_until: 0,
+      is_estimated: true
+    };
+    try {
+      const insRes = await fetch(url + '/rest/v1/' + table, {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, authHeaders),
+        body: JSON.stringify(testRecord)
+      });
+      const insBody = (await insRes.text()).slice(0, 300);
+      report.저장테스트 = { 상태코드: insRes.status };
+
+      if (insRes.status === 201 || insRes.status === 200) {
+        report.저장테스트.결과 = '성공 — 실제로 한 줄 저장되었습니다';
+        report.저장테스트.안내 = 'Table Editor 에서 신랑/신부가 "테스트"인 행을 지워주세요.';
+      } else if (insRes.status === 401 || insRes.status === 403) {
+        report.저장테스트.결과 = '실패 — RLS 정책이 저장을 막고 있습니다';
+        report.저장테스트.안내 = 'supabase_setup.sql 의 3) 정책 부분을 다시 실행하세요.';
+        report.저장테스트.응답 = insBody;
+      } else {
+        report.저장테스트.결과 = '실패';
+        report.저장테스트.응답 = insBody;
+      }
+    } catch (err) {
+      report.저장테스트 = { 결과: '실패 — ' + err.message };
+    }
+  } else {
+    report.저장테스트 = '주소 뒤에 ?insert=1 을 붙이면 실제 저장까지 검사합니다';
   }
 
   res.status(200).json(report);
