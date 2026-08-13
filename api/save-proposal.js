@@ -11,6 +11,16 @@
 
 const MAX_NAME_LENGTH = 12;
 
+// SUPABASE_URL 에 끝 슬래시나 /rest/v1 이 붙어 있어도 정상 처리되도록 정리
+function normalizeSupabaseUrl(raw) {
+  let u = String(raw || '').trim();
+  u = u.replace(/\s+/g, '');         // 중간에 낀 공백/줄바꿈 제거
+  u = u.replace(/\/+$/, '');         // 끝 슬래시 제거
+  u = u.replace(/\/rest\/v1$/i, ''); // 실수로 붙인 /rest/v1 제거
+  u = u.replace(/\/+$/, '');
+  return u;
+}
+
 // 한국 시간(KST) 기준 오늘 날짜를 'YYYY-MM-DD'로 반환
 function todayInKST() {
   const nowUtcMs = Date.now();
@@ -48,8 +58,8 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+  const SUPABASE_URL = normalizeSupabaseUrl(process.env.SUPABASE_URL);
+  const SUPABASE_ANON_KEY = (process.env.SUPABASE_ANON_KEY || '').trim();
   const SUPABASE_TABLE = process.env.SUPABASE_TABLE || 'proposals';
 
   // 환경변수가 아직 등록되지 않았다면 저장만 건너뜁니다 (화면은 정상 동작)
