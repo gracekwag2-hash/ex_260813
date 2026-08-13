@@ -1,0 +1,8 @@
+# 모든 검색엔진 크롤러 허용
+User-agent: *
+Allow: /
+
+# 진단·저장용 API는 검색 결과에 뜰 필요가 없습니다
+Disallow: /api/
+
+Sitemap: https://ex-260813-awjy.vercel.app/sitemap.xml

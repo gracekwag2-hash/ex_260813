@@ -3,7 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>나와 데이트할래?</title>
+
+<!-- ================= 검색엔진 최적화 (SEO) =================
+     구글이 색인하는 제목입니다.
+     링크를 받은 상대방에게는 아래 스크립트가 개인화된 제목으로 바꿔줍니다.
+========================================================= -->
+<title>프로포즈 게임 | 나와 데이트할래? 💕 도망가는 싫어 버튼</title>
+<meta name="description" content="절대 누를 수 없는 '싫어!!' 버튼으로 고백하는 프로포즈 게임. 신랑 신부 이름을 넣으면 나만의 고백 링크가 만들어져요. 결혼식 D-day까지 함께 확인하세요.">
+<meta name="keywords" content="프로포즈 게임, 프로포즈, 고백, 데이트 신청, 도망가는 버튼, 커플 게임, 결혼 디데이">
+<link rel="canonical" href="https://ex-260813-awjy.vercel.app/">
+<meta name="robots" content="index, follow">
+
+<!-- 카카오톡·페이스북 등에서 링크 공유할 때 보이는 미리보기 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="프로포즈 게임">
+<meta property="og:title" content="나와 데이트할래? 💕">
+<meta property="og:description" content="'싫어!!' 버튼은 절대 누를 수 없어요. 눌러서 확인해보세요!">
+<meta property="og:url" content="https://ex-260813-awjy.vercel.app/">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="나와 데이트할래? 💕">
+<meta name="twitter:description" content="'싫어!!' 버튼은 절대 누를 수 없어요. 눌러서 확인해보세요!">
+
+<!-- 구글 서치 콘솔 소유권 확인용.
+     서치 콘솔에서 받은 코드를 content 에 넣고 주석(<!-- -->)을 벗기세요.
+     자세한 방법은 SEO_검색등록방법.md 참고
+<meta name="google-site-verification" content="여기에_확인_코드_붙여넣기">
+-->
+
+<!-- 검색결과에 서비스 정보가 풍부하게 표시되도록 하는 구조화 데이터 -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "프로포즈 게임",
+  "alternateName": "나와 데이트할래?",
+  "url": "https://ex-260813-awjy.vercel.app/",
+  "description": "절대 누를 수 없는 '싫어!!' 버튼으로 고백하는 프로포즈 게임. 신랑 신부 이름을 넣으면 나만의 고백 링크가 만들어집니다.",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "All",
+  "inLanguage": "ko-KR",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  }
+}
+</script>
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-DMCPZWX9WN"></script>
@@ -55,6 +102,19 @@
     padding: 0 20px;
   }
   .screen.hidden { display: none; }
+
+  /* 화면에는 안 보이지만 검색엔진·화면낭독기는 읽을 수 있는 텍스트 */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 
   h1 {
     font-size: 32px;
@@ -389,6 +449,8 @@
 
   <!-- 1단계: 이름 입력 -->
   <div class="screen" id="setup-screen">
+    <!-- 검색엔진과 화면낭독기를 위한 대표 제목 (화면에는 보이지 않음) -->
+    <h1 class="sr-only">프로포즈 게임 — 나와 데이트할래?</h1>
     <div class="setup-card">
       <h2>두근두근 고백하기 💌</h2>
       <p class="desc">이름을 넣으면 상대방에게 보낼<br>나만의 고백 링크가 만들어져요</p>
@@ -668,6 +730,10 @@ function startGame(groom, bride) {
   document.getElementById('game-sub').textContent =
     groom + josa(groom, '이', '가') + ' 물어보는 중… 신중하게 골라줘';
   document.getElementById('popup-couple').textContent = groom + ' ♥ ' + bride;
+
+  // 링크를 받은 사람에게는 브라우저 탭 제목도 개인화해서 보여줍니다.
+  // (구글이 색인하는 것은 파라미터 없는 기본 주소이므로 SEO 제목은 그대로 유지됩니다)
+  document.title = bride + josa(bride, '아', '야') + ', 나와 데이트할래? 💕';
 
   setupScreen.classList.add('hidden');
   gameScreen.classList.remove('hidden');
