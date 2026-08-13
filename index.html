@@ -360,6 +360,16 @@
     color: #999;
   }
 
+  /* '싫어!!' 를 눌렀을 때 뜨는 팝업 */
+  .no-popup { max-width: 320px; }
+  /* 팝업이 뜰 때마다 좌우로 한 번 흔들립니다 (JS가 클래스를 다시 붙여 재생) */
+  .no-popup.shake { animation: shake 0.4s ease; }
+  @keyframes shake {
+    0%, 100% { transform: scale(1) translateX(0); }
+    25%      { transform: scale(1) translateX(-9px); }
+    75%      { transform: scale(1) translateX(9px); }
+  }
+
   /* 웨딩홀 추천 팝업 (고마워 팝업 바로 아래에 함께 등장) */
   .hall-popup {
     padding: 24px 26px;
@@ -467,8 +477,8 @@
 
       <p class="error-msg" id="error-msg"></p>
 
-      <button class="primary-btn" id="btn-make-link">고백 링크 만들기 💗</button>
-      <button class="ghost-btn" id="btn-preview">먼저 체험해보기</button>
+      <button class="primary-btn" id="btn-preview">먼저 체험해보기 👀</button>
+      <button class="ghost-btn" id="btn-make-link">고백 링크 만들기 💗</button>
 
       <div class="link-box hidden" id="link-box">
         <p class="label">이 링크를 상대방에게 보내세요 👇</p>
@@ -490,15 +500,24 @@
 
 </div>
 
-<!-- 3단계: 결혼식 날짜 입력 팝업 -->
+<!-- '싫어!!' 를 눌렀을 때 뜨는 팝업 -->
+<div class="overlay" id="no-overlay">
+  <div class="popup no-popup">
+    <div class="emoji">🙅‍♀️</div>
+    <p class="big">노우 노우 노우!!</p>
+    <span class="note">다시 골라줘 😝</span>
+  </div>
+</div>
+
+<!-- 3단계: 데이트 날짜 입력 팝업 -->
 <div class="overlay" id="date-overlay">
   <div class="popup">
-    <div class="emoji">💍</div>
-    <h3>우리 결혼식은 언제일까?</h3>
-    <p class="hint" id="date-hint">결혼식 날짜를 알려줘!</p>
+    <div class="emoji">📅</div>
+    <h3>우리 데이트는 언제 할까?</h3>
+    <p class="hint" id="date-hint">데이트 날짜를 알려줘!</p>
 
     <div class="field">
-      <label for="input-date" id="date-label">결혼식 날짜</label>
+      <label for="input-date" id="date-label">데이트 날짜</label>
       <input type="date" id="input-date">
     </div>
 
@@ -548,7 +567,7 @@
 // =====================================================
 const SAVE_API = '/api/save-proposal';
 
-// 결혼식 정보를 서버에 저장 요청
+// 데이트 정보를 서버에 저장 요청
 async function saveProposal(record) {
   try {
     const res = await fetch(SAVE_API, {
@@ -638,7 +657,7 @@ function toISODate(d) {
   return y + '-' + m + '-' + day;
 }
 
-// 두 날짜(YYYY-MM-DD) 사이의 일수 차이 = 결혼식날짜 - 이용날짜
+// 두 날짜(YYYY-MM-DD) 사이의 일수 차이 = 데이트날짜 - 이용날짜
 function daysBetween(fromISO, toISO) {
   const a = new Date(fromISO + 'T00:00:00');
   const b = new Date(toISO + 'T00:00:00');
@@ -708,7 +727,7 @@ document.getElementById('btn-preview').addEventListener('click', () => {
     if (el === inputGroom) {
       inputBride.focus();
     } else {
-      document.getElementById('btn-make-link').click();
+      document.getElementById('btn-preview').click();
     }
   });
 });
@@ -749,110 +768,40 @@ function startGame(groom, bride) {
 })();
 
 // =====================================================
-//  '싫어!!' 버튼 도망 로직
+//  '싫어!!' 버튼 — 움직이지 않고, 누르면 거절당합니다
 // =====================================================
-let dodging = false;
-const EDGE_MARGIN = 12;
+const noOverlay = document.getElementById('no-overlay');
+let noPopupTimer = null;
 
-function boundsFor(w, h) {
-  const maxLeft = Math.max(EDGE_MARGIN, window.innerWidth - w - EDGE_MARGIN);
-  const maxTop = Math.max(EDGE_MARGIN, window.innerHeight - h - EDGE_MARGIN);
-  return { maxLeft, maxTop };
-}
-
-function randomPosition() {
-  const { maxLeft, maxTop } = boundsFor(noBtn.offsetWidth, noBtn.offsetHeight);
-  const x = EDGE_MARGIN + Math.random() * Math.max(0, maxLeft - EDGE_MARGIN);
-  const y = EDGE_MARGIN + Math.random() * Math.max(0, maxTop - EDGE_MARGIN);
-  return { x, y };
-}
-
-function activateFixedMode() {
-  if (dodging) return;
-  const rect = noBtn.getBoundingClientRect();
-  noBtn.style.position = 'fixed';
-  noBtn.style.left = rect.left + 'px';
-  noBtn.style.top = rect.top + 'px';
-  noBtn.style.margin = '0';
-  dodging = true;
-  clampToViewport();
-}
-
-// 창 크기가 바뀌어도(리사이즈, 화면 회전 등) 버튼이 화면 밖으로 나가지 않도록 위치를 다시 맞춤
-function clampToViewport() {
-  if (!dodging) return;
-  const rect = noBtn.getBoundingClientRect();
-  const { maxLeft, maxTop } = boundsFor(rect.width, rect.height);
-  noBtn.style.left = Math.min(Math.max(EDGE_MARGIN, rect.left), maxLeft) + 'px';
-  noBtn.style.top = Math.min(Math.max(EDGE_MARGIN, rect.top), maxTop) + 'px';
-}
-window.addEventListener('resize', clampToViewport);
-window.addEventListener('orientationchange', clampToViewport);
-
-function dodge() {
-  activateFixedMode();
-  const { x, y } = randomPosition();
-  noBtn.style.left = x + 'px';
-  noBtn.style.top = y + 'px';
-}
-
-// 데스크톱: 버튼에 실제로 가까워지기 전까지는 절대 움직이지 않음
-const THRESHOLD = 65;     // 이 거리 안에 들어와야 반응 시작
-const MAX_SPEED = 1.1;    // 프레임당 최대 이동 거리 (작을수록 슬금슬금)
-
-let lastMouseX = null;
-let lastMouseY = null;
-
-document.addEventListener('mousemove', (e) => {
-  if (!gameActive) return;
-  lastMouseX = e.clientX;
-  lastMouseY = e.clientY;
-  activateFixedMode();
-});
-
-function animateDodge() {
-  requestAnimationFrame(animateDodge);
-  if (!gameActive || !dodging || lastMouseX === null) return;
-
-  const rect = noBtn.getBoundingClientRect();
-  const { maxLeft, maxTop } = boundsFor(rect.width, rect.height);
-
-  const dx = (rect.left + rect.width / 2) - lastMouseX;
-  const dy = (rect.top + rect.height / 2) - lastMouseY;
-  const dist = Math.hypot(dx, dy) || 1;
-
-  // 임계 거리 밖이면 완전히 정지 상태 유지
-  if (dist >= THRESHOLD) return;
-
-  const speed = (1 - dist / THRESHOLD) * MAX_SPEED;
-  const angle = Math.atan2(dy, dx);
-
-  noBtn.style.left = Math.min(Math.max(EDGE_MARGIN, rect.left + Math.cos(angle) * speed), maxLeft) + 'px';
-  noBtn.style.top = Math.min(Math.max(EDGE_MARGIN, rect.top + Math.sin(angle) * speed), maxTop) + 'px';
-}
-requestAnimationFrame(animateDodge);
-
-// 모바일: 터치(클릭 시도)하는 순간 도망
-noBtn.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  dodge();
-}, { passive: false });
-
-noBtn.addEventListener('pointerdown', (e) => {
-  if (e.pointerType === 'touch') {
-    e.preventDefault();
-    dodge();
+function closeNoPopup() {
+  noOverlay.classList.remove('show');
+  if (noPopupTimer) {
+    clearTimeout(noPopupTimer);
+    noPopupTimer = null;
   }
-});
+}
 
-// 안전장치: 혹시라도 클릭이 성사되면 무시
+const noPopupCard = noOverlay.querySelector('.no-popup');
+
 noBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  dodge();
+  noOverlay.classList.add('show');
+
+  // 클래스를 뗐다 붙여야 흔들림 애니메이션이 매번 다시 재생됩니다
+  noPopupCard.classList.remove('shake');
+  void noPopupCard.offsetWidth;   // 리플로우를 강제해 애니메이션 초기화
+  noPopupCard.classList.add('shake');
+
+  // 잠깐 보여준 뒤 자동으로 닫혀서 다시 좋아!!/싫어!! 화면으로 돌아갑니다
+  if (noPopupTimer) clearTimeout(noPopupTimer);
+  noPopupTimer = setTimeout(closeNoPopup, 1600);
 });
 
+// 기다리기 답답하면 아무 데나 눌러서 바로 닫을 수 있게
+noOverlay.addEventListener('click', closeNoPopup);
+
 // =====================================================
-//  3단계: 결혼식 날짜 입력
+//  3단계: 데이트 날짜 입력
 // =====================================================
 const inputDate = document.getElementById('input-date');
 const checkUndecided = document.getElementById('check-undecided');
@@ -865,9 +814,9 @@ const saveState = document.getElementById('save-state');
 // 직전에 저장한 내용 (같은 값이면 다시 저장하지 않음)
 let lastSavedKey = null;
 
-// '좋아!!'를 누르면 결혼식 날짜부터 물어봅니다
+// '좋아!!'를 누르면 데이트 날짜부터 물어봅니다
 yesBtn.addEventListener('click', () => {
-  gameActive = false; // 팝업이 뜬 동안에는 '싫어!!' 버튼이 움직이지 않도록
+  gameActive = false; // 날짜 팝업이 떠 있는 동안임을 표시
   inputDate.min = toISODate(new Date());
   dateOverlay.classList.add('show');
 });
@@ -875,12 +824,12 @@ yesBtn.addEventListener('click', () => {
 // '아직 안 정했어요'를 체크하면 예상 날짜를 물어보는 문구로 바뀝니다
 checkUndecided.addEventListener('change', () => {
   if (checkUndecided.checked) {
-    dateHint.textContent = '괜찮아! 그럼 대략 언제쯤이 좋을지 예상 날짜를 적어줘 😊';
-    dateLabel.textContent = '예상 결혼식 날짜';
+    dateHint.textContent = '괜찮아! 그럼 대략 언제쯤이 좋을지 적어줘 😊';
+    dateLabel.textContent = '예상 데이트 날짜';
     submitDateBtn.textContent = '이때쯤으로 하기 💕';
   } else {
-    dateHint.textContent = '결혼식 날짜를 알려줘!';
-    dateLabel.textContent = '결혼식 날짜';
+    dateHint.textContent = '데이트 날짜를 알려줘!';
+    dateLabel.textContent = '데이트 날짜';
     submitDateBtn.textContent = '이 날로 정하기 💕';
   }
   dateError.textContent = '';
@@ -891,7 +840,7 @@ submitDateBtn.addEventListener('click', async () => {
   if (!weddingDate) {
     dateError.textContent = checkUndecided.checked
       ? '예상 날짜라도 골라줘!'
-      : '결혼식 날짜를 골라줘!';
+      : '데이트 날짜를 골라줘!';
     return;
   }
   dateError.textContent = '';
@@ -981,7 +930,7 @@ hallBtn.addEventListener('click', () => {
 
 function showFinalPopup(weddingDate, daysUntil, isEstimated) {
   const ddayEl = document.getElementById('popup-dday');
-  const prefix = isEstimated ? '예상 결혼식 ' : '결혼식 ';
+  const prefix = isEstimated ? '예상 데이트 ' : '데이트 ';
   let ddayText;
 
   if (daysUntil > 0) {
@@ -1007,13 +956,6 @@ overlay.addEventListener('click', (e) => {
   if (e.target !== overlay && e.target !== popupStack) return;
   overlay.classList.remove('show');
   gameActive = true;
-  dodging = false;
-  lastMouseX = null;
-  lastMouseY = null;
-  noBtn.style.position = '';
-  noBtn.style.left = '';
-  noBtn.style.top = '';
-  noBtn.style.margin = '';
   saveState.textContent = '';
 });
 
