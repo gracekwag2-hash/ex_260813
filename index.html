@@ -233,6 +233,16 @@
     opacity: 1;
     pointer-events: auto;
   }
+  /* 팝업이 두 개 쌓일 때 화면을 넘치면 스크롤되도록 */
+  .overlay { overflow-y: auto; }
+  .popup-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 380px;
+    margin: auto;
+  }
   .popup {
     background: #fff;
     border-radius: 24px;
@@ -289,6 +299,52 @@
     font-size: 14px;
     color: #999;
   }
+
+  /* 웨딩홀 추천 팝업 (고마워 팝업 바로 아래에 함께 등장) */
+  .hall-popup {
+    padding: 24px 26px;
+    transition: transform 0.25s ease 0.12s;  /* 살짝 늦게 떠서 자연스럽게 */
+  }
+  .hall-popup .label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #a61e4d;
+    background: #ffeef3;
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin-bottom: 10px;
+  }
+  .hall-popup h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #d6336c;
+    margin: 0 0 6px;
+    word-break: keep-all;
+  }
+  .hall-popup p.desc2 {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 16px;
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+  .hall-btn {
+    display: block;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 999px;
+    border: none;
+    background: #d6336c;
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .hall-btn:hover { background: #c2255c; }
+  .hall-btn:active { transform: scale(0.98); }
 
   /* 날짜 미정 체크박스 */
   .check-row {
@@ -396,14 +452,27 @@
   </div>
 </div>
 
-<!-- 4단계: 마무리 팝업 -->
+<!-- 4단계: 마무리 팝업 + 웨딩홀 추천 팝업 (동시에 등장) -->
 <div class="overlay" id="overlay">
-  <div class="popup">
-    <div class="emoji">🥰</div>
-    <p class="big">히히 나도 좋아!!</p>
-    <p class="couple" id="popup-couple"></p>
-    <div class="dday" id="popup-dday"></div>
-    <span class="note">빨리 만나러 가자 🫶</span>
+  <div class="popup-stack" id="popup-stack">
+
+    <div class="popup">
+      <div class="emoji">🥰</div>
+      <p class="big">히히 나도 좋아!!</p>
+      <p class="couple" id="popup-couple"></p>
+      <div class="dday" id="popup-dday"></div>
+      <span class="note">빨리 만나러 가자 🫶</span>
+    </div>
+
+    <div class="popup hall-popup">
+      <span class="label">웨딩홀 추천 💒</span>
+      <h4>결혼식장은 정하셨나요?</h4>
+      <p class="desc2">성균관컨벤션에서<br>두 분의 특별한 날을 준비해보세요</p>
+      <a class="hall-btn" id="hall-btn"
+         href="https://www.skkconvention.co.kr/"
+         target="_blank" rel="noopener noreferrer">성균관컨벤션 둘러보기 →</a>
+    </div>
+
   </div>
 </div>
 
@@ -810,6 +879,40 @@ function formatKoreanDate(iso) {
   return Number(y) + '년 ' + Number(m) + '월 ' + Number(d) + '일';
 }
 
+// =====================================================
+//  웨딩홀 추천 팝업 - 구글 애널리틱스 측정
+// =====================================================
+const HALL_URL = 'https://www.skkconvention.co.kr/';
+const hallBtn = document.getElementById('hall-btn');
+
+// gtag 가 아직 안 실렸거나 광고 차단으로 막혀도 오류가 나지 않도록 감쌉니다
+function trackEvent(name, params) {
+  try {
+    if (typeof gtag === 'function') gtag('event', name, params || {});
+  } catch (err) {
+    console.warn('GA 이벤트 전송 실패:', err);
+  }
+}
+
+// 팝업이 노출된 횟수 (클릭률 계산에 필요)
+function trackHallImpression(weddingDate, isEstimated) {
+  trackEvent('hall_recommend_view', {
+    hall_name: '성균관컨벤션',
+    wedding_date: weddingDate,
+    is_estimated: isEstimated
+  });
+}
+
+// 추천 버튼 클릭 횟수
+hallBtn.addEventListener('click', () => {
+  trackEvent('hall_recommend_click', {
+    hall_name: '성균관컨벤션',
+    link_url: HALL_URL,
+    link_domain: 'skkconvention.co.kr',
+    outbound: true
+  });
+});
+
 function showFinalPopup(weddingDate, daysUntil, isEstimated) {
   const ddayEl = document.getElementById('popup-dday');
   const prefix = isEstimated ? '예상 결혼식 ' : '결혼식 ';
@@ -826,11 +929,16 @@ function showFinalPopup(weddingDate, daysUntil, isEstimated) {
 
   dateOverlay.classList.remove('show');
   overlay.classList.add('show');
+
+  // 고마워 팝업과 홀 추천 팝업이 함께 떴으므로 노출을 기록합니다
+  trackHallImpression(weddingDate, isEstimated);
 }
 
 // 마무리 팝업 바깥을 누르면 게임 화면으로 복귀
+// (팝업이 두 개라 카드 사이 여백을 눌러도 닫히도록 처리)
+const popupStack = document.getElementById('popup-stack');
 overlay.addEventListener('click', (e) => {
-  if (e.target !== overlay) return;
+  if (e.target !== overlay && e.target !== popupStack) return;
   overlay.classList.remove('show');
   gameActive = true;
   dodging = false;
