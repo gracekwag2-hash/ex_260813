@@ -32,25 +32,140 @@
     0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
     100% { transform: translateY(-110vh) rotate(30deg); opacity: 0; }
   }
-  .card {
+  .screen {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
     z-index: 2;
+    width: 100%;
+    max-width: 420px;
+    padding: 0 20px;
   }
+  .screen.hidden { display: none; }
+
   h1 {
     font-size: 32px;
     color: #d6336c;
     margin: 0 0 8px;
     text-shadow: 0 2px 8px rgba(255,255,255,0.6);
+    word-break: keep-all;
   }
   .sub {
     font-size: 15px;
     color: #a61e4d;
     margin: 0 0 36px;
   }
+
+  /* 이름 입력 화면 */
+  .setup-card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 24px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 30px rgba(214, 51, 108, 0.18);
+  }
+  .setup-card h2 {
+    font-size: 22px;
+    color: #d6336c;
+    margin: 0 0 4px;
+  }
+  .setup-card .desc {
+    font-size: 13px;
+    color: #a61e4d;
+    margin: 0 0 22px;
+    line-height: 1.5;
+  }
+  .field {
+    text-align: left;
+    margin-bottom: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #a61e4d;
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    font-size: 16px;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: 2px solid #ffc1cc;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+  }
+  .field input:focus { border-color: #d6336c; }
+
+  .primary-btn {
+    width: 100%;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 15px;
+    border-radius: 999px;
+    border: none;
+    background: #d6336c;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: inherit;
+  }
+  .primary-btn:hover { background: #c2255c; }
+  .primary-btn:active { transform: scale(0.98); }
+
+  .ghost-btn {
+    width: 100%;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px;
+    border-radius: 999px;
+    border: 2px solid #ffc1cc;
+    background: transparent;
+    color: #d6336c;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: inherit;
+  }
+  .ghost-btn:hover { background: rgba(255,255,255,0.6); }
+
+  .error-msg {
+    font-size: 13px;
+    color: #c2255c;
+    font-weight: 700;
+    margin: 10px 0 0;
+    min-height: 18px;
+  }
+
+  /* 링크 생성 결과 */
+  .link-box {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed #ffc1cc;
+    text-align: left;
+  }
+  .link-box.hidden { display: none; }
+  .link-box p.label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #a61e4d;
+    margin: 0 0 8px;
+  }
+  .link-value {
+    font-size: 12px;
+    color: #555;
+    background: #fff;
+    border: 2px solid #ffe0e8;
+    border-radius: 10px;
+    padding: 10px 12px;
+    word-break: break-all;
+    line-height: 1.5;
+    max-height: 72px;
+    overflow-y: auto;
+  }
+
+  /* 게임 화면 */
   .button-row {
     display: flex;
     justify-content: center;
@@ -67,6 +182,7 @@
     box-shadow: 0 6px 16px rgba(214, 51, 108, 0.3);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     white-space: nowrap;
+    font-family: inherit;
   }
   .btn:active { transform: scale(0.95); }
   .btn.yes {
@@ -84,6 +200,7 @@
     z-index: 5;
     transition: transform 0.15s ease;
   }
+
   .overlay {
     position: fixed;
     inset: 0;
@@ -95,6 +212,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
+    padding: 20px;
   }
   .overlay.show {
     opacity: 1;
@@ -103,15 +221,13 @@
   .popup {
     background: #fff;
     border-radius: 24px;
-    padding: 40px 48px;
+    padding: 40px 44px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25);
     transform: scale(0.8);
     transition: transform 0.25s ease;
   }
-  .overlay.show .popup {
-    transform: scale(1);
-  }
+  .overlay.show .popup { transform: scale(1); }
   .popup .emoji {
     font-size: 48px;
     margin-bottom: 12px;
@@ -120,48 +236,198 @@
     font-size: 24px;
     font-weight: 700;
     color: #d6336c;
-    margin: 0 0 8px;
+    margin: 0 0 10px;
   }
-  .popup span {
+  .popup .couple {
+    font-size: 16px;
+    font-weight: 700;
+    color: #a61e4d;
+    margin: 0 0 6px;
+  }
+  .popup span.note {
     font-size: 14px;
     color: #999;
   }
+
   @media (max-width: 480px) {
     h1 { font-size: 24px; }
     .btn { font-size: 16px; padding: 14px 26px; }
     .button-row { gap: 16px; }
+    .popup { padding: 32px 28px; }
   }
 </style>
 </head>
 <body>
 
 <div class="stage" id="stage">
-  <div class="card">
-    <h1>나와 데이트할래? 💕</h1>
-    <p class="sub">신중하게 골라줘</p>
+
+  <!-- 1단계: 이름 입력 -->
+  <div class="screen" id="setup-screen">
+    <div class="setup-card">
+      <h2>두근두근 고백하기 💌</h2>
+      <p class="desc">이름을 넣으면 상대방에게 보낼<br>나만의 고백 링크가 만들어져요</p>
+
+      <div class="field">
+        <label for="input-from">내 이름</label>
+        <input type="text" id="input-from" placeholder="예) 은한" maxlength="12" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="input-to">상대방 이름</label>
+        <input type="text" id="input-to" placeholder="예) 혜원" maxlength="12" autocomplete="off">
+      </div>
+
+      <p class="error-msg" id="error-msg"></p>
+
+      <button class="primary-btn" id="btn-make-link">고백 링크 만들기 💗</button>
+      <button class="ghost-btn" id="btn-preview">먼저 체험해보기</button>
+
+      <div class="link-box hidden" id="link-box">
+        <p class="label">이 링크를 상대방에게 보내세요 👇</p>
+        <div class="link-value" id="link-value"></div>
+        <button class="primary-btn" id="btn-copy">링크 복사하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2단계: 게임 -->
+  <div class="screen hidden" id="game-screen">
+    <h1 id="game-title">나와 데이트할래? 💕</h1>
+    <p class="sub" id="game-sub">신중하게 골라줘</p>
     <div class="button-row">
       <button class="btn yes" id="btn-yes">좋아!!</button>
       <button class="btn no" id="btn-no">싫어!!</button>
     </div>
   </div>
+
 </div>
 
 <div class="overlay" id="overlay">
   <div class="popup">
     <div class="emoji">🥰</div>
     <p>히히 나도 좋아!!</p>
-    <span>빨리 만나러 가자 🫶</span>
+    <p class="couple" id="popup-couple"></p>
+    <span class="note">빨리 만나러 가자 🫶</span>
   </div>
 </div>
 
 <script>
+const stage = document.getElementById('stage');
+const setupScreen = document.getElementById('setup-screen');
+const gameScreen = document.getElementById('game-screen');
 const noBtn = document.getElementById('btn-no');
 const yesBtn = document.getElementById('btn-yes');
 const overlay = document.getElementById('overlay');
-const stage = document.getElementById('stage');
 
+// 한국어 조사 처리 (받침 유무에 따라 자동 선택)
+function hasJongseong(name) {
+  if (!name) return false;
+  const c = name.charCodeAt(name.length - 1);
+  if (c < 0xAC00 || c > 0xD7A3) return false; // 한글이 아니면 받침 없음으로 처리
+  return (c - 0xAC00) % 28 !== 0;
+}
+function josa(name, withJong, withoutJong) {
+  return hasJongseong(name) ? withJong : withoutJong;
+}
+
+// ---------- 1단계: 이름 입력 ----------
+const inputFrom = document.getElementById('input-from');
+const inputTo = document.getElementById('input-to');
+const errorMsg = document.getElementById('error-msg');
+const linkBox = document.getElementById('link-box');
+const linkValue = document.getElementById('link-value');
+
+function readNames() {
+  return {
+    from: inputFrom.value.trim(),
+    to: inputTo.value.trim()
+  };
+}
+
+function validate() {
+  const { from, to } = readNames();
+  if (!from || !to) {
+    errorMsg.textContent = '두 사람의 이름을 모두 적어주세요!';
+    return null;
+  }
+  errorMsg.textContent = '';
+  return { from, to };
+}
+
+function buildLink(from, to) {
+  const base = location.origin + location.pathname;
+  return base + '?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+}
+
+document.getElementById('btn-make-link').addEventListener('click', () => {
+  const names = validate();
+  if (!names) return;
+  linkValue.textContent = buildLink(names.from, names.to);
+  linkBox.classList.remove('hidden');
+});
+
+document.getElementById('btn-copy').addEventListener('click', async (e) => {
+  const text = linkValue.textContent;
+  const btn = e.currentTarget;
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '복사 완료! ✓';
+  } catch (err) {
+    // 클립보드 권한이 없을 때는 직접 선택할 수 있게 안내
+    const range = document.createRange();
+    range.selectNodeContents(linkValue);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    btn.textContent = '길게 눌러 복사해주세요';
+  }
+  setTimeout(() => { btn.textContent = '링크 복사하기'; }, 2000);
+});
+
+document.getElementById('btn-preview').addEventListener('click', () => {
+  const names = validate();
+  if (!names) return;
+  startGame(names.from, names.to);
+});
+
+// 엔터로 넘어가기
+[inputFrom, inputTo].forEach((el) => {
+  el.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    if (el === inputFrom) {
+      inputTo.focus();
+    } else {
+      document.getElementById('btn-make-link').click();
+    }
+  });
+});
+
+// ---------- 2단계: 게임 ----------
+let gameActive = false;
+
+function startGame(from, to) {
+  // textContent만 사용해 이름을 넣습니다 (HTML로 해석되지 않도록)
+  document.getElementById('game-title').textContent =
+    to + josa(to, '아', '야') + ', 나와 데이트할래? 💕';
+  document.getElementById('game-sub').textContent =
+    from + josa(from, '이', '가') + ' 물어보는 중… 신중하게 골라줘';
+  document.getElementById('popup-couple').textContent = from + ' ♥ ' + to;
+
+  setupScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  gameActive = true;
+}
+
+// 링크에 이름이 담겨 있으면 입력 화면을 건너뛰고 바로 게임 시작
+(function initFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const from = (params.get('from') || '').trim().slice(0, 12);
+  const to = (params.get('to') || '').trim().slice(0, 12);
+  if (from && to) startGame(from, to);
+})();
+
+// ---------- '싫어!!' 버튼 도망 로직 ----------
 let dodging = false;
-
 const EDGE_MARGIN = 12;
 
 function boundsFor(w, h) {
@@ -171,9 +437,7 @@ function boundsFor(w, h) {
 }
 
 function randomPosition() {
-  const w = noBtn.offsetWidth;
-  const h = noBtn.offsetHeight;
-  const { maxLeft, maxTop } = boundsFor(w, h);
+  const { maxLeft, maxTop } = boundsFor(noBtn.offsetWidth, noBtn.offsetHeight);
   const x = EDGE_MARGIN + Math.random() * Math.max(0, maxLeft - EDGE_MARGIN);
   const y = EDGE_MARGIN + Math.random() * Math.max(0, maxTop - EDGE_MARGIN);
   return { x, y };
@@ -190,15 +454,13 @@ function activateFixedMode() {
   clampToViewport();
 }
 
-// 창 크기가 바뀌어도(리사이즈, 모바일 화면 회전 등) 버튼이 화면 밖으로 나가지 않도록 위치를 다시 맞춤
+// 창 크기가 바뀌어도(리사이즈, 화면 회전 등) 버튼이 화면 밖으로 나가지 않도록 위치를 다시 맞춤
 function clampToViewport() {
   if (!dodging) return;
   const rect = noBtn.getBoundingClientRect();
   const { maxLeft, maxTop } = boundsFor(rect.width, rect.height);
-  const newLeft = Math.min(Math.max(EDGE_MARGIN, rect.left), maxLeft);
-  const newTop = Math.min(Math.max(EDGE_MARGIN, rect.top), maxTop);
-  noBtn.style.left = newLeft + 'px';
-  noBtn.style.top = newTop + 'px';
+  noBtn.style.left = Math.min(Math.max(EDGE_MARGIN, rect.left), maxLeft) + 'px';
+  noBtn.style.top = Math.min(Math.max(EDGE_MARGIN, rect.top), maxTop) + 'px';
 }
 window.addEventListener('resize', clampToViewport);
 window.addEventListener('orientationchange', clampToViewport);
@@ -210,14 +472,15 @@ function dodge() {
   noBtn.style.top = y + 'px';
 }
 
-// 데스크톱: 버튼에 실제로 가까워지기 전까지는 절대 움직이지 않음. 가까워지면 그때부터 조금씩 이동.
-const THRESHOLD = 65;     // 이 거리 안에 들어와야 반응 시작 (버튼 바로 근처에서만 반응)
-const MAX_SPEED = 1.1;    // 프레임당 최대 이동 거리 (작을수록 천천히, 부드럽게)
+// 데스크톱: 버튼에 실제로 가까워지기 전까지는 절대 움직이지 않음
+const THRESHOLD = 65;     // 이 거리 안에 들어와야 반응 시작
+const MAX_SPEED = 1.1;    // 프레임당 최대 이동 거리 (작을수록 슬금슬금)
 
 let lastMouseX = null;
 let lastMouseY = null;
 
 document.addEventListener('mousemove', (e) => {
+  if (!gameActive) return;
   lastMouseX = e.clientX;
   lastMouseY = e.clientY;
   activateFixedMode();
@@ -225,33 +488,27 @@ document.addEventListener('mousemove', (e) => {
 
 function animateDodge() {
   requestAnimationFrame(animateDodge);
-  if (!dodging || lastMouseX === null) return;
+  if (!gameActive || !dodging || lastMouseX === null) return;
 
   const rect = noBtn.getBoundingClientRect();
   const { maxLeft, maxTop } = boundsFor(rect.width, rect.height);
 
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  const dx = cx - lastMouseX;
-  const dy = cy - lastMouseY;
+  const dx = (rect.left + rect.width / 2) - lastMouseX;
+  const dy = (rect.top + rect.height / 2) - lastMouseY;
   const dist = Math.hypot(dx, dy) || 1;
 
-  // 임계 거리 밖이면 완전히 정지 상태 유지 (움직이지 않음)
+  // 임계 거리 밖이면 완전히 정지 상태 유지
   if (dist >= THRESHOLD) return;
 
-  const strength = 1 - dist / THRESHOLD; // 가까울수록 1에 가까움, 멀수록 0에 가까움
-  const speed = strength * MAX_SPEED;
+  const speed = (1 - dist / THRESHOLD) * MAX_SPEED;
   const angle = Math.atan2(dy, dx);
 
-  const newLeft = Math.min(Math.max(EDGE_MARGIN, rect.left + Math.cos(angle) * speed), maxLeft);
-  const newTop = Math.min(Math.max(EDGE_MARGIN, rect.top + Math.sin(angle) * speed), maxTop);
-
-  noBtn.style.left = newLeft + 'px';
-  noBtn.style.top = newTop + 'px';
+  noBtn.style.left = Math.min(Math.max(EDGE_MARGIN, rect.left + Math.cos(angle) * speed), maxLeft) + 'px';
+  noBtn.style.top = Math.min(Math.max(EDGE_MARGIN, rect.top + Math.sin(angle) * speed), maxTop) + 'px';
 }
 requestAnimationFrame(animateDodge);
 
-// 모바일: 터치(클릭 시도) 하는 순간 도망
+// 모바일: 터치(클릭 시도)하는 순간 도망
 noBtn.addEventListener('touchstart', (e) => {
   e.preventDefault();
   dodge();
@@ -274,9 +531,9 @@ yesBtn.addEventListener('click', () => {
   overlay.classList.add('show');
 });
 
-// 팝업 바깥(카드 이외 영역)을 누르면 처음 화면으로 복귀
+// 팝업 바깥을 누르면 게임 화면으로 복귀
 overlay.addEventListener('click', (e) => {
-  if (e.target !== overlay) return; // 팝업 내부 클릭은 무시
+  if (e.target !== overlay) return;
   overlay.classList.remove('show');
   dodging = false;
   lastMouseX = null;
@@ -287,7 +544,7 @@ overlay.addEventListener('click', (e) => {
   noBtn.style.margin = '';
 });
 
-// 떠다니는 하트 배경
+// ---------- 떠다니는 하트 배경 ----------
 function spawnHeart() {
   const heart = document.createElement('div');
   heart.className = 'heart';
