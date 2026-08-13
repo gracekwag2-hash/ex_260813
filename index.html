@@ -87,7 +87,8 @@
     color: #a61e4d;
     margin-bottom: 6px;
   }
-  .field input {
+  .field input[type="text"],
+  .field input[type="date"] {
     width: 100%;
     font-size: 16px;
     padding: 13px 14px;
@@ -96,6 +97,7 @@
     background: #fff;
     outline: none;
     font-family: inherit;
+    color: #333;
   }
   .field input:focus { border-color: #d6336c; }
 
@@ -114,6 +116,7 @@
   }
   .primary-btn:hover { background: #c2255c; }
   .primary-btn:active { transform: scale(0.98); }
+  .primary-btn:disabled { background: #e9a9be; cursor: default; }
 
   .ghost-btn {
     width: 100%;
@@ -201,6 +204,7 @@
     transition: transform 0.15s ease;
   }
 
+  /* 공통 오버레이 / 팝업 */
   .overlay {
     position: fixed;
     inset: 0;
@@ -221,18 +225,33 @@
   .popup {
     background: #fff;
     border-radius: 24px;
-    padding: 40px 44px;
+    padding: 36px 40px;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0,0,0,0.25);
     transform: scale(0.8);
     transition: transform 0.25s ease;
+    width: 100%;
+    max-width: 380px;
   }
   .overlay.show .popup { transform: scale(1); }
   .popup .emoji {
-    font-size: 48px;
-    margin-bottom: 12px;
+    font-size: 44px;
+    margin-bottom: 10px;
   }
-  .popup p {
+  .popup h3 {
+    font-size: 21px;
+    font-weight: 700;
+    color: #d6336c;
+    margin: 0 0 6px;
+    word-break: keep-all;
+  }
+  .popup p.hint {
+    font-size: 13px;
+    color: #a61e4d;
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  .popup p.big {
     font-size: 24px;
     font-weight: 700;
     color: #d6336c;
@@ -244,16 +263,56 @@
     color: #a61e4d;
     margin: 0 0 6px;
   }
+  .popup .dday {
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #a61e4d;
+    background: #ffeef3;
+    border-radius: 999px;
+    padding: 8px 18px;
+    margin: 4px 0 10px;
+  }
   .popup span.note {
+    display: block;
     font-size: 14px;
     color: #999;
+  }
+
+  /* 날짜 미정 체크박스 */
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+    text-align: left;
+  }
+  .check-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #d6336c;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .check-row label {
+    font-size: 13px;
+    color: #a61e4d;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .save-state {
+    font-size: 12px;
+    color: #999;
+    margin: 10px 0 0;
+    min-height: 16px;
   }
 
   @media (max-width: 480px) {
     h1 { font-size: 24px; }
     .btn { font-size: 16px; padding: 14px 26px; }
     .button-row { gap: 16px; }
-    .popup { padding: 32px 28px; }
+    .popup { padding: 30px 24px; }
   }
 </style>
 </head>
@@ -268,13 +327,13 @@
       <p class="desc">이름을 넣으면 상대방에게 보낼<br>나만의 고백 링크가 만들어져요</p>
 
       <div class="field">
-        <label for="input-from">내 이름</label>
-        <input type="text" id="input-from" placeholder="예) 은한" maxlength="12" autocomplete="off">
+        <label for="input-groom">신랑 이름</label>
+        <input type="text" id="input-groom" placeholder="예) 은한" maxlength="12" autocomplete="off">
       </div>
 
       <div class="field">
-        <label for="input-to">상대방 이름</label>
-        <input type="text" id="input-to" placeholder="예) 혜원" maxlength="12" autocomplete="off">
+        <label for="input-bride">신부 이름</label>
+        <input type="text" id="input-bride" placeholder="예) 혜원" maxlength="12" autocomplete="off">
       </div>
 
       <p class="error-msg" id="error-msg"></p>
@@ -302,22 +361,100 @@
 
 </div>
 
+<!-- 3단계: 결혼식 날짜 입력 팝업 -->
+<div class="overlay" id="date-overlay">
+  <div class="popup">
+    <div class="emoji">💍</div>
+    <h3>우리 결혼식은 언제일까?</h3>
+    <p class="hint" id="date-hint">결혼식 날짜를 알려줘!</p>
+
+    <div class="field">
+      <label for="input-date" id="date-label">결혼식 날짜</label>
+      <input type="date" id="input-date">
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="check-undecided">
+      <label for="check-undecided">아직 날짜가 정해지지 않았어요</label>
+    </div>
+
+    <p class="error-msg" id="date-error"></p>
+
+    <button class="primary-btn" id="btn-submit-date">이 날로 정하기 💕</button>
+    <p class="save-state" id="save-state"></p>
+  </div>
+</div>
+
+<!-- 4단계: 마무리 팝업 -->
 <div class="overlay" id="overlay">
   <div class="popup">
     <div class="emoji">🥰</div>
-    <p>히히 나도 좋아!!</p>
+    <p class="big">히히 나도 좋아!!</p>
     <p class="couple" id="popup-couple"></p>
+    <div class="dday" id="popup-dday"></div>
     <span class="note">빨리 만나러 가자 🫶</span>
   </div>
 </div>
 
 <script>
+// =====================================================
+//  저장 API
+//
+//  Supabase 주소와 키는 브라우저가 아니라 서버(api/save-proposal.js)에서
+//  Vercel 환경변수로 읽습니다. 이 파일에는 비밀값이 들어가지 않습니다.
+//  환경변수 등록 방법은 SUPABASE_설정방법.md 를 참고하세요.
+// =====================================================
+const SAVE_API = '/api/save-proposal';
+
+// 결혼식 정보를 서버에 저장 요청
+async function saveProposal(record) {
+  try {
+    const res = await fetch(SAVE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record)
+    });
+
+    // 서버가 JSON을 못 돌려주는 환경(로컬 파일 열기 등)도 대비합니다
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (err) {
+      data = null;
+    }
+
+    if (!res.ok) {
+      console.error('저장 실패:', res.status, data);
+      return { ok: false, skipped: false };
+    }
+    // 환경변수 미등록 시 서버가 skipped로 알려줍니다
+    if (data && data.skipped) {
+      console.warn('Supabase 환경변수가 없어 저장을 건너뜁니다.');
+      return { ok: false, skipped: true };
+    }
+    return {
+      ok: true,
+      skipped: false,
+      usedDate: data && data.used_date,
+      daysUntil: data && typeof data.days_until === 'number' ? data.days_until : null
+    };
+  } catch (err) {
+    // 로컬에서 파일을 직접 열면 /api 가 없으므로 여기로 옵니다
+    console.warn('저장 서버에 연결할 수 없습니다.', err);
+    return { ok: false, skipped: true };
+  }
+}
+
+// =====================================================
+//  공통 유틸
+// =====================================================
 const stage = document.getElementById('stage');
 const setupScreen = document.getElementById('setup-screen');
 const gameScreen = document.getElementById('game-screen');
 const noBtn = document.getElementById('btn-no');
 const yesBtn = document.getElementById('btn-yes');
 const overlay = document.getElementById('overlay');
+const dateOverlay = document.getElementById('date-overlay');
 
 // 한국어 조사 처리 (받침 유무에 따라 자동 선택)
 function hasJongseong(name) {
@@ -330,39 +467,50 @@ function josa(name, withJong, withoutJong) {
   return hasJongseong(name) ? withJong : withoutJong;
 }
 
-// ---------- 1단계: 이름 입력 ----------
-const inputFrom = document.getElementById('input-from');
-const inputTo = document.getElementById('input-to');
+// 'YYYY-MM-DD' 형식으로 변환 (시간대 영향 없이)
+function toISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+// 두 날짜(YYYY-MM-DD) 사이의 일수 차이 = 결혼식날짜 - 이용날짜
+function daysBetween(fromISO, toISO) {
+  const a = new Date(fromISO + 'T00:00:00');
+  const b = new Date(toISO + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+}
+
+// =====================================================
+//  1단계: 이름 입력
+// =====================================================
+const inputGroom = document.getElementById('input-groom');
+const inputBride = document.getElementById('input-bride');
 const errorMsg = document.getElementById('error-msg');
 const linkBox = document.getElementById('link-box');
 const linkValue = document.getElementById('link-value');
 
-function readNames() {
-  return {
-    from: inputFrom.value.trim(),
-    to: inputTo.value.trim()
-  };
-}
-
-function validate() {
-  const { from, to } = readNames();
-  if (!from || !to) {
+function validateNames() {
+  const groom = inputGroom.value.trim();
+  const bride = inputBride.value.trim();
+  if (!groom || !bride) {
     errorMsg.textContent = '두 사람의 이름을 모두 적어주세요!';
     return null;
   }
   errorMsg.textContent = '';
-  return { from, to };
+  return { groom, bride };
 }
 
-function buildLink(from, to) {
+function buildLink(groom, bride) {
   const base = location.origin + location.pathname;
-  return base + '?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+  return base + '?groom=' + encodeURIComponent(groom) + '&bride=' + encodeURIComponent(bride);
 }
 
 document.getElementById('btn-make-link').addEventListener('click', () => {
-  const names = validate();
+  const names = validateNames();
   if (!names) return;
-  linkValue.textContent = buildLink(names.from, names.to);
+  linkValue.textContent = buildLink(names.groom, names.bride);
   linkBox.classList.remove('hidden');
 });
 
@@ -385,33 +533,40 @@ document.getElementById('btn-copy').addEventListener('click', async (e) => {
 });
 
 document.getElementById('btn-preview').addEventListener('click', () => {
-  const names = validate();
+  const names = validateNames();
   if (!names) return;
-  startGame(names.from, names.to);
+  startGame(names.groom, names.bride);
 });
 
 // 엔터로 넘어가기
-[inputFrom, inputTo].forEach((el) => {
+[inputGroom, inputBride].forEach((el) => {
   el.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
-    if (el === inputFrom) {
-      inputTo.focus();
+    if (el === inputGroom) {
+      inputBride.focus();
     } else {
       document.getElementById('btn-make-link').click();
     }
   });
 });
 
-// ---------- 2단계: 게임 ----------
+// =====================================================
+//  2단계: 게임
+// =====================================================
 let gameActive = false;
+let groomName = '';
+let brideName = '';
 
-function startGame(from, to) {
+function startGame(groom, bride) {
+  groomName = groom;
+  brideName = bride;
+
   // textContent만 사용해 이름을 넣습니다 (HTML로 해석되지 않도록)
   document.getElementById('game-title').textContent =
-    to + josa(to, '아', '야') + ', 나와 데이트할래? 💕';
+    bride + josa(bride, '아', '야') + ', 나와 데이트할래? 💕';
   document.getElementById('game-sub').textContent =
-    from + josa(from, '이', '가') + ' 물어보는 중… 신중하게 골라줘';
-  document.getElementById('popup-couple').textContent = from + ' ♥ ' + to;
+    groom + josa(groom, '이', '가') + ' 물어보는 중… 신중하게 골라줘';
+  document.getElementById('popup-couple').textContent = groom + ' ♥ ' + bride;
 
   setupScreen.classList.add('hidden');
   gameScreen.classList.remove('hidden');
@@ -421,12 +576,14 @@ function startGame(from, to) {
 // 링크에 이름이 담겨 있으면 입력 화면을 건너뛰고 바로 게임 시작
 (function initFromUrl() {
   const params = new URLSearchParams(location.search);
-  const from = (params.get('from') || '').trim().slice(0, 12);
-  const to = (params.get('to') || '').trim().slice(0, 12);
-  if (from && to) startGame(from, to);
+  const groom = (params.get('groom') || '').trim().slice(0, 12);
+  const bride = (params.get('bride') || '').trim().slice(0, 12);
+  if (groom && bride) startGame(groom, bride);
 })();
 
-// ---------- '싫어!!' 버튼 도망 로직 ----------
+// =====================================================
+//  '싫어!!' 버튼 도망 로직
+// =====================================================
 let dodging = false;
 const EDGE_MARGIN = 12;
 
@@ -527,14 +684,124 @@ noBtn.addEventListener('click', (e) => {
   dodge();
 });
 
+// =====================================================
+//  3단계: 결혼식 날짜 입력
+// =====================================================
+const inputDate = document.getElementById('input-date');
+const checkUndecided = document.getElementById('check-undecided');
+const dateError = document.getElementById('date-error');
+const dateHint = document.getElementById('date-hint');
+const dateLabel = document.getElementById('date-label');
+const submitDateBtn = document.getElementById('btn-submit-date');
+const saveState = document.getElementById('save-state');
+
+// 직전에 저장한 내용 (같은 값이면 다시 저장하지 않음)
+let lastSavedKey = null;
+
+// '좋아!!'를 누르면 결혼식 날짜부터 물어봅니다
 yesBtn.addEventListener('click', () => {
-  overlay.classList.add('show');
+  gameActive = false; // 팝업이 뜬 동안에는 '싫어!!' 버튼이 움직이지 않도록
+  inputDate.min = toISODate(new Date());
+  dateOverlay.classList.add('show');
 });
 
-// 팝업 바깥을 누르면 게임 화면으로 복귀
+// '아직 안 정했어요'를 체크하면 예상 날짜를 물어보는 문구로 바뀝니다
+checkUndecided.addEventListener('change', () => {
+  if (checkUndecided.checked) {
+    dateHint.textContent = '괜찮아! 그럼 대략 언제쯤이 좋을지 예상 날짜를 적어줘 😊';
+    dateLabel.textContent = '예상 결혼식 날짜';
+    submitDateBtn.textContent = '이때쯤으로 하기 💕';
+  } else {
+    dateHint.textContent = '결혼식 날짜를 알려줘!';
+    dateLabel.textContent = '결혼식 날짜';
+    submitDateBtn.textContent = '이 날로 정하기 💕';
+  }
+  dateError.textContent = '';
+});
+
+submitDateBtn.addEventListener('click', async () => {
+  const weddingDate = inputDate.value;
+  if (!weddingDate) {
+    dateError.textContent = checkUndecided.checked
+      ? '예상 날짜라도 골라줘!'
+      : '결혼식 날짜를 골라줘!';
+    return;
+  }
+  dateError.textContent = '';
+
+  const usedDate = toISODate(new Date());
+  const daysUntil = daysBetween(usedDate, weddingDate);
+
+  // 이용 날짜와 D-day는 서버가 다시 계산해서 돌려줍니다.
+  // 아래 값은 서버 응답이 없을 때 쓰는 예비값입니다.
+  const record = {
+    groom_name: groomName,
+    bride_name: brideName,
+    wedding_date: weddingDate,
+    is_estimated: checkUndecided.checked
+  };
+
+  // 같은 내용을 다시 제출하면 저장을 건너뜁니다 (중복 행 방지)
+  const recordKey = JSON.stringify(record);
+  if (recordKey === lastSavedKey) {
+    showFinalPopup(weddingDate, daysUntil, checkUndecided.checked);
+    return;
+  }
+
+  // 저장 중에는 버튼을 잠가 연타로 인한 중복 저장을 막습니다
+  submitDateBtn.disabled = true;
+  saveState.textContent = '저장하는 중…';
+
+  const result = await saveProposal(record);
+
+  // 저장에 실패해도 축하 화면은 정상적으로 보여줍니다
+  if (result.ok) {
+    lastSavedKey = recordKey;
+    saveState.textContent = '저장 완료!';
+  } else if (result.skipped) {
+    saveState.textContent = '';
+  } else {
+    saveState.textContent = '저장은 실패했지만 계속 진행할게요.';
+  }
+
+  // 서버가 계산한 D-day가 있으면 그 값을 우선 사용합니다
+  const finalDays = (result.ok && result.daysUntil !== null) ? result.daysUntil : daysUntil;
+
+  showFinalPopup(weddingDate, finalDays, checkUndecided.checked);
+  submitDateBtn.disabled = false;
+});
+
+// =====================================================
+//  4단계: 마무리 팝업
+// =====================================================
+function formatKoreanDate(iso) {
+  const [y, m, d] = iso.split('-');
+  return Number(y) + '년 ' + Number(m) + '월 ' + Number(d) + '일';
+}
+
+function showFinalPopup(weddingDate, daysUntil, isEstimated) {
+  const ddayEl = document.getElementById('popup-dday');
+  const prefix = isEstimated ? '예상 결혼식 ' : '결혼식 ';
+  let ddayText;
+
+  if (daysUntil > 0) {
+    ddayText = prefix + formatKoreanDate(weddingDate) + ' · D-' + daysUntil;
+  } else if (daysUntil === 0) {
+    ddayText = prefix + formatKoreanDate(weddingDate) + ' · 오늘! 🎉';
+  } else {
+    ddayText = prefix + formatKoreanDate(weddingDate) + ' · D+' + Math.abs(daysUntil);
+  }
+  ddayEl.textContent = ddayText;
+
+  dateOverlay.classList.remove('show');
+  overlay.classList.add('show');
+}
+
+// 마무리 팝업 바깥을 누르면 게임 화면으로 복귀
 overlay.addEventListener('click', (e) => {
   if (e.target !== overlay) return;
   overlay.classList.remove('show');
+  gameActive = true;
   dodging = false;
   lastMouseX = null;
   lastMouseY = null;
@@ -542,9 +809,12 @@ overlay.addEventListener('click', (e) => {
   noBtn.style.left = '';
   noBtn.style.top = '';
   noBtn.style.margin = '';
+  saveState.textContent = '';
 });
 
-// ---------- 떠다니는 하트 배경 ----------
+// =====================================================
+//  떠다니는 하트 배경
+// =====================================================
 function spawnHeart() {
   const heart = document.createElement('div');
   heart.className = 'heart';
